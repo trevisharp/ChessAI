@@ -51,6 +51,9 @@ public sealed class State
     public bool CanBlackLeftCastling { get; set; } = true;
     public bool CanBlackRightCastling { get; set; } = true;
 
+    public int EnPassantPieceX { get; set; } = -1;
+    public int EnPassantPieceY { get; set; } = -1;
+
     /// <summary>
     /// Generate a new state com base in a moviment.
     /// </summary>
@@ -73,7 +76,7 @@ public sealed class State
     static State()
     {
         empty = new State();
-        classicWhite = new State()
+        classic = new State()
         {
             [0, 0] = Piece.WhiteRook,
             [1, 0] = Piece.WhiteKnight,
@@ -108,41 +111,6 @@ public sealed class State
             [6, 6] = Piece.BlackPawn,
             [7, 6] = Piece.BlackPawn
         };
-        classicBlack = new State()
-        {
-            [0, 0] = Piece.BlackRook,
-            [1, 0] = Piece.BlackKnight,
-            [2, 0] = Piece.BlackBishop,
-            [3, 0] = Piece.BlackQueen,
-            [4, 0] = Piece.BlackKing,
-            [5, 0] = Piece.BlackBishop,
-            [6, 0] = Piece.BlackKnight,
-            [7, 0] = Piece.BlackRook,
-            [0, 1] = Piece.BlackPawn,
-            [1, 1] = Piece.BlackPawn,
-            [2, 1] = Piece.BlackPawn,
-            [3, 1] = Piece.BlackPawn,
-            [4, 1] = Piece.BlackPawn,
-            [5, 1] = Piece.BlackPawn,
-            [6, 1] = Piece.BlackPawn,
-            [7, 1] = Piece.BlackPawn,
-            [0, 7] = Piece.WhiteRook,
-            [1, 7] = Piece.WhiteKnight,
-            [2, 7] = Piece.WhiteBishop,
-            [3, 7] = Piece.WhiteQueen,
-            [4, 7] = Piece.WhiteKing,
-            [5, 7] = Piece.WhiteBishop,
-            [6, 7] = Piece.WhiteKnight,
-            [7, 7] = Piece.WhiteRook,
-            [0, 6] = Piece.WhitePawn,
-            [1, 6] = Piece.WhitePawn,
-            [2, 6] = Piece.WhitePawn,
-            [3, 6] = Piece.WhitePawn,
-            [4, 6] = Piece.WhitePawn,
-            [5, 6] = Piece.WhitePawn,
-            [6, 6] = Piece.WhitePawn,
-            [7, 6] = Piece.WhitePawn
-        };
     }
 
     /// <summary>
@@ -154,12 +122,6 @@ public sealed class State
     /// <summary>
     /// Classic Game For White Player
     /// </summary>
-    private static readonly State classicWhite;
-    public static State ClassicWhite => new State(classicWhite);
-
-    /// <summary>
-    /// Classic Game For Black Player
-    /// </summary>
-    private static readonly State classicBlack;
-    public static State ClassicBlack => new State(classicBlack);
+    private static readonly State classic;
+    public static State Classic => new State(classic);
 }
