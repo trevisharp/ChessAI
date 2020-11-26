@@ -17,7 +17,7 @@ public enum Piece : byte
     BlackKing = 12
 }
 
-public class State
+public sealed class State
 {
     private byte[] board = new byte[64];
 
@@ -29,17 +29,21 @@ public class State
 
     private State() { }
 
-    private State(State original, int sx, int sy, int ex, int ey)
+    private State(State original)
     {
         Array.Copy(original.board, this.board, 64);
-        Piece p = this[sx, sy];
-        this[ex, ey] = p;
-        this[sx, sy] = Piece.None;
 
         this.CanWhiteLeftCastling = original.CanWhiteLeftCastling;
         this.CanWhiteRightCastling = original.CanWhiteRightCastling;
         this.CanBlackLeftCastling = original.CanBlackLeftCastling;
         this.CanBlackRightCastling = original.CanBlackRightCastling;
+    }
+
+    private State(State original, int sx, int sy, int ex, int ey) : this(original)
+    {
+        Piece p = this[sx, sy];
+        this[ex, ey] = p;
+        this[sx, sy] = Piece.None;
     }
 
     public bool CanWhiteLeftCastling { get; set; } = true;
@@ -63,10 +67,13 @@ public class State
         return new State(this, sx, sy, ex, ey);
     }
 
+    public State Copy()
+        => new State(this);
+
     static State()
     {
-        Empty = new State();
-        Classic = new State()
+        empty = new State();
+        classicWhite = new State()
         {
             [0, 0] = Piece.WhiteRook,
             [1, 0] = Piece.WhiteKnight,
@@ -101,15 +108,58 @@ public class State
             [6, 6] = Piece.BlackPawn,
             [7, 6] = Piece.BlackPawn
         };
+        classicBlack = new State()
+        {
+            [0, 0] = Piece.BlackRook,
+            [1, 0] = Piece.BlackKnight,
+            [2, 0] = Piece.BlackBishop,
+            [3, 0] = Piece.BlackQueen,
+            [4, 0] = Piece.BlackKing,
+            [5, 0] = Piece.BlackBishop,
+            [6, 0] = Piece.BlackKnight,
+            [7, 0] = Piece.BlackRook,
+            [0, 1] = Piece.BlackPawn,
+            [1, 1] = Piece.BlackPawn,
+            [2, 1] = Piece.BlackPawn,
+            [3, 1] = Piece.BlackPawn,
+            [4, 1] = Piece.BlackPawn,
+            [5, 1] = Piece.BlackPawn,
+            [6, 1] = Piece.BlackPawn,
+            [7, 1] = Piece.BlackPawn,
+            [0, 7] = Piece.WhiteRook,
+            [1, 7] = Piece.WhiteKnight,
+            [2, 7] = Piece.WhiteBishop,
+            [3, 7] = Piece.WhiteQueen,
+            [4, 7] = Piece.WhiteKing,
+            [5, 7] = Piece.WhiteBishop,
+            [6, 7] = Piece.WhiteKnight,
+            [7, 7] = Piece.WhiteRook,
+            [0, 6] = Piece.WhitePawn,
+            [1, 6] = Piece.WhitePawn,
+            [2, 6] = Piece.WhitePawn,
+            [3, 6] = Piece.WhitePawn,
+            [4, 6] = Piece.WhitePawn,
+            [5, 6] = Piece.WhitePawn,
+            [6, 6] = Piece.WhitePawn,
+            [7, 6] = Piece.WhitePawn
+        };
     }
 
     /// <summary>
     /// No Piece State
     /// </summary>
-    public static readonly State Empty;
+    private static readonly State empty;
+    public static State Empty => new State(empty);
 
     /// <summary>
-    /// Classic Empty Game
+    /// Classic Game For White Player
     /// </summary>
-    public static readonly State Classic;
+    private static readonly State classicWhite;
+    public static State ClassicWhite => new State(classicWhite);
+
+    /// <summary>
+    /// Classic Game For Black Player
+    /// </summary>
+    private static readonly State classicBlack;
+    public static State ClassicBlack => new State(classicBlack);
 }
