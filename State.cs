@@ -17,9 +17,10 @@ public enum Piece : byte
     BlackKing = 12
 }
 
-public sealed class State
+public readonly struct State
 {
-    private byte[] board = new byte[64];
+    private readonly byte[] board;
+    private readonly byte aditionalinfo;
 
     public Piece this[int x, int y]
     {
@@ -27,32 +28,56 @@ public sealed class State
         set => board[8 * y + x] = (byte)value;
     }
 
-    private State() { }
+    public bool CanWhiteLeftCastling => this.aditionalinfo % 2 == 0;
+    public bool CanWhiteRightCastling => (this.aditionalinfo >> 1) % 2 == 0;
+    public bool CanBlackLeftCastling => (this.aditionalinfo >> 2) % 2 == 0;
+    public bool CanBlackRightCastling => (this.aditionalinfo >> 3) % 2 == 0;
+    public byte EnPassantInfo => (byte)(this.aditionalinfo >> 4);
+
+    private State(bool empty)
+    {
+        board = new byte[64];
+        aditionalinfo = empty ? 255 : 0;
+    }
 
     private State(State original)
     {
+        this.board = new byte[64];
         Array.Copy(original.board, this.board, 64);
-
-        this.CanWhiteLeftCastling = original.CanWhiteLeftCastling;
-        this.CanWhiteRightCastling = original.CanWhiteRightCastling;
-        this.CanBlackLeftCastling = original.CanBlackLeftCastling;
-        this.CanBlackRightCastling = original.CanBlackRightCastling;
+        this.aditionalinfo = original.aditionalinfo;
     }
 
-    private State(State original, int sx, int sy, int ex, int ey) : this(original)
+    private State(State original, int sx, int sy, int ex, int ey)
     {
+        this.board = new byte[64];
+        Array.Copy(original.board, this.board, 64);
+        this.aditionalinfo = (byte)(original.aditionalinfo % 16);
         Piece p = this[sx, sy];
         this[ex, ey] = p;
         this[sx, sy] = Piece.None;
     }
 
-    public bool CanWhiteLeftCastling { get; set; } = true;
-    public bool CanWhiteRightCastling { get; set; } = true;
-    public bool CanBlackLeftCastling { get; set; } = true;
-    public bool CanBlackRightCastling { get; set; } = true;
+    private State(State original, int sx, int sy, int ex, int ey,
+        byte castlinginfo)
+    {
+        this.board = new byte[64];
+        Array.Copy(original.board, this.board, 64);
+        this.aditionalinfo = (byte)(castlinginfo % 16);
+        Piece p = this[sx, sy];
+        this[ex, ey] = p;
+        this[sx, sy] = Piece.None;
+    }
 
-    public int EnPassantPieceX { get; set; } = -1;
-    public int EnPassantPieceY { get; set; } = -1;
+    private State(State original, int sx, int sy, int ex, int ey,
+        byte castlinginfo, byte enpassantinfo)
+    {
+        this.board = new byte[64];
+        Array.Copy(original.board, this.board, 64);
+        this.aditionalinfo = (byte)(enpassantinfo << 4 + castlinginfo);
+        Piece p = this[sx, sy];
+        this[ex, ey] = p;
+        this[sx, sy] = Piece.None;
+    }
 
     /// <summary>
     /// Generate a new state com base in a moviment.
@@ -70,13 +95,90 @@ public sealed class State
         return new State(this, sx, sy, ex, ey);
     }
 
+    /// <summary>
+    /// Generate a new state com base in a moviment.
+    /// </summary>
+    /// <param name="sx">x start location of moviment.</param>
+    /// <param name="sy">y start location of moviment.</param>
+    /// <param name="ex">x end location of moviment.</param>
+    /// <param name="ey">y end location of moviment.</param>
+    /// <param name="lefBlkLoseCastling">True if Black lose yours Castling left move.</param>
+    /// <param name="rigBlkLoseCastling">True if Black lose yours Castling right move.</param>
+    /// <param name="lefWhtLoseCastling">True if White lose yours Castling left move.</param>
+    /// <param name="rigWhtLoseCastling">True if White lose yours Castling right move.</param>
+    /// <returns>A new state</returns>
+    public State Move(int sx, int sy, int ex, int ey,
+        bool lefBlkLoseCastling, bool rigBlkLoseCastling,
+        bool lefWhtLoseCastling, bool rigWhtLoseCastling)
+    {
+        if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
+            ex < 0 || ex > 7 || ey < 0 || ey > 7)
+            throw new InvalidOperationException("Um movimento ocorre fora do tabuleiro");
+        byte castlinginfo = (byte)(this.aditionalinfo % 16);
+        if (lefWhtLoseCastling)
+            castlinginfo += 1;
+        if (rigWhtLoseCastling)
+            castlinginfo += 2;
+        if (lefBlkLoseCastling)
+            castlinginfo += 4;
+        if (rigBlkLoseCastling)
+            castlinginfo += 8;
+        return new State(this, sx, sy, ex, ey, castlinginfo);
+    }
+
+    /// <summary>
+    /// Generate a new state com base in a moviment.
+    /// </summary>
+    /// <param name="sx">x start location of moviment.</param>
+    /// <param name="sy">y start location of moviment.</param>
+    /// <param name="ex">x end location of moviment.</param>
+    /// <param name="ey">y end location of moviment.</param>
+    /// <param name="lefBlkLoseCastling">True if Black lose yours Castling left move.</param>
+    /// <param name="rigBlkLoseCastling">True if Black lose yours Castling right move.</param>
+    /// <param name="lefWhtLoseCastling">True if White lose yours Castling left move.</param>
+    /// <param name="rigWhtLoseCastling">True if White lose yours Castling right move.</param>
+    /// <param name="column">En Passant Pawn Column.</param>
+    /// <returns>A new state</returns>
+    public State Move(int sx, int sy, int ex, int ey,
+        bool lefBlkLoseCastling, bool rigBlkLoseCastling,
+        bool lefWhtLoseCastling, bool rigWhtLoseCastling,
+        byte column)
+    {
+        if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
+            ex < 0 || ex > 7 || ey < 0 || ey > 7)
+            throw new InvalidOperationException("Um movimento ocorre fora do tabuleiro");
+        byte castlinginfo = (byte)(this.aditionalinfo % 16);
+        byte enpassantinfo = 0;
+        if (lefWhtLoseCastling)
+            castlinginfo += 1;
+        if (rigWhtLoseCastling)
+            castlinginfo += 2;
+        if (lefBlkLoseCastling)
+            castlinginfo += 4;
+        if (rigBlkLoseCastling)
+            castlinginfo += 8;
+        castlinginfo += (byte)(column + 1);
+        return new State(this, sx, sy, ex, ey, castlinginfo, enpassantinfo);
+    }
+
     public State Copy()
         => new State(this);
 
+    public static bool operator ==(State a, State b)
+    {
+        for (int i = 0; i < 64; i++)
+            if (a.board[i] != b.board[i])
+                return false;
+        return a.aditionalinfo == b.aditionalinfo;
+    }
+
+    public static bool operator !=(State a, State b)
+        => !(a == b);
+
     static State()
     {
-        empty = new State();
-        classic = new State()
+        empty = new State(true);
+        classic = new State(false)
         {
             [0, 0] = Piece.WhiteRook,
             [1, 0] = Piece.WhiteKnight,
@@ -117,11 +219,17 @@ public sealed class State
     /// No Piece State
     /// </summary>
     private static readonly State empty;
-    public static State Empty => new State(empty);
+    public static State Empty => empty;
 
     /// <summary>
     /// Classic Game For White Player
     /// </summary>
     private static readonly State classic;
-    public static State Classic => new State(classic);
+    public static State Classic => classic;
+
+    public override bool Equals(object obj)
+        => obj is State s && s == this;
+
+    public override int GetHashCode()
+        => board.GetHashCode();
 }

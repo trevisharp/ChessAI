@@ -20,3 +20,5 @@ obj/Debug/net5.0-windows/ChessAI.AssemblyInfoInputs.cache
 *.cache
 *.txt
 *.editorconfig
+obj/Release/net5.0-windows/.NETCoreApp,Version=v5.0.AssemblyAttributes.cs
+obj/Release/net5.0-windows/ChessAI.AssemblyInfo.cs
