@@ -36,6 +36,12 @@ public readonly struct State
         set => board[8 * y + x] = (byte)value;
     }
 
+    public Piece this[int i]
+    {
+        get => (Piece)board[i];
+        set => board[i] = (byte)value;
+    }
+
     public bool IsEmpty => this.aditionalinfo == 255;
 
     public bool CanWhiteLeftCastling => this.aditionalinfo % 2 == 0;
@@ -212,13 +218,14 @@ public readonly struct State
     /// <param name="rigBlkLoseCastling">True if Black lose yours Castling right move.</param>
     /// <param name="lefWhtLoseCastling">True if White lose yours Castling left move.</param>
     /// <param name="rigWhtLoseCastling">True if White lose yours Castling right move.</param>
+    /// <param name="column">En Passant Pawn Column.</param>
     /// <param name="blackKingMove">True if Black King moves.</param>
     /// <param name="whiteKingMove">True if White King moves.</param>
     /// <returns>A new state</returns>
     public State Move(int sx, int sy, int ex, int ey,
-    bool lefBlkLoseCastling, bool rigBlkLoseCastling,
-    bool lefWhtLoseCastling, bool rigWhtLoseCastling,
-    byte column, bool blackKingMove, bool whiteKingMove)
+        bool lefBlkLoseCastling, bool rigBlkLoseCastling,
+        bool lefWhtLoseCastling, bool rigWhtLoseCastling,
+        byte column, bool blackKingMove, bool whiteKingMove)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
@@ -246,6 +253,54 @@ public readonly struct State
             enpassantinfo, blackkinginfo, whitekinginfo);
     }
 
+    /// <summary>
+    /// Generate a new state com base in a moviment.
+    /// </summary>
+    /// <param name="sx">x start location of moviment.</param>
+    /// <param name="sy">y start location of moviment.</param>
+    /// <param name="ex">x end location of moviment.</param>
+    /// <param name="ey">y end location of moviment.</param>
+    /// <param name="lefBlkLoseCastling">True if Black lose yours Castling left move.</param>
+    /// <param name="rigBlkLoseCastling">True if Black lose yours Castling right move.</param>
+    /// <param name="lefWhtLoseCastling">True if White lose yours Castling left move.</param>
+    /// <param name="rigWhtLoseCastling">True if White lose yours Castling right move.</param>
+    /// <param name="blackKingMove">True if Black King moves.</param>
+    /// <param name="whiteKingMove">True if White King moves.</param>
+    /// <returns>A new state</returns>
+    public State Move(int sx, int sy, int ex, int ey,
+        bool lefBlkLoseCastling, bool rigBlkLoseCastling,
+        bool lefWhtLoseCastling, bool rigWhtLoseCastling,
+        bool blackKingMove, bool whiteKingMove)
+    {
+        if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
+            ex < 0 || ex > 7 || ey < 0 || ey > 7)
+            throw new InvalidOperationException("Um movimento ocorre fora do tabuleiro");
+        byte castlinginfo = (byte)(this.aditionalinfo % 16);
+        byte enpassantinfo = 0;
+        if (lefWhtLoseCastling)
+            castlinginfo += 1;
+        if (rigWhtLoseCastling)
+            castlinginfo += 2;
+        if (lefBlkLoseCastling)
+            castlinginfo += 4;
+        if (rigBlkLoseCastling)
+            castlinginfo += 8;
+
+        byte blackkinginfo = this.blackkinginfo;
+        if (blackKingMove)
+            blackkinginfo = (byte)(ex + 16 * ey);
+        byte whitekinginfo = this.whitekinginfo;
+        if (whiteKingMove)
+            whitekinginfo = (byte)(ex + 16 * ey);
+        
+        return new State(this, sx, sy, ex, ey, castlinginfo, 
+            enpassantinfo, blackkinginfo, whitekinginfo);
+    }
+
+    /// <summary>
+    /// Create a Perfect Copy of this state.
+    /// </summary>
+    /// <returns>State copy.</returns>
     public State Copy()
         => new State(this);
 
