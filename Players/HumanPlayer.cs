@@ -1,5 +1,9 @@
+using System.Linq;
 using System.Threading.Tasks;
 
+/// <summary>
+/// TODO: Implements play limitation
+/// </summary>
 public class HumanPlayer : Player
 {
     int sx = -1;
@@ -9,11 +13,16 @@ public class HumanPlayer : Player
 
     public override async Task<State> Play(State state, bool whiteplay)
     {
-        while (sx == -1 || 
+        State newstate = State.Empty;
+        while (newstate == State.Empty)
+        while (sx == -1 ||
             (whiteplay && state[sx, sy].IsBlack()) ||
             (!whiteplay && state[sx, sy].IsWhite()))
             await Task.Delay(100);
-        State newstate = state.Move(sx, sy, ex, ey);
+        newstate = state.MoveCertify(sx, sy, ex, ey);
+
+
+
         sx = sy = ex = ey = -1;
         return newstate;
     }
