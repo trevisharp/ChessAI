@@ -203,7 +203,7 @@ public readonly struct State
             castlinginfo += 4;
         if (rigBlkLoseCastling)
             castlinginfo += 8;
-        castlinginfo += (byte)(column + 1);
+        enpassantinfo = (byte)(column + 1);
         return new State(this, sx, sy, ex, ey, castlinginfo, enpassantinfo);
     }
 
@@ -240,7 +240,7 @@ public readonly struct State
             castlinginfo += 4;
         if (rigBlkLoseCastling)
             castlinginfo += 8;
-        castlinginfo += (byte)(column + 1);
+        enpassantinfo = (byte)(column + 1);
 
         byte blackkinginfo = this.blackkinginfo;
         if (blackKingMove)
@@ -248,8 +248,8 @@ public readonly struct State
         byte whitekinginfo = this.whitekinginfo;
         if (whiteKingMove)
             whitekinginfo = (byte)(ex + 16 * ey);
-        
-        return new State(this, sx, sy, ex, ey, castlinginfo, 
+
+        return new State(this, sx, sy, ex, ey, castlinginfo,
             enpassantinfo, blackkinginfo, whitekinginfo);
     }
 
@@ -292,8 +292,8 @@ public readonly struct State
         byte whitekinginfo = this.whitekinginfo;
         if (whiteKingMove)
             whitekinginfo = (byte)(ex + 16 * ey);
-        
-        return new State(this, sx, sy, ex, ey, castlinginfo, 
+
+        return new State(this, sx, sy, ex, ey, castlinginfo,
             enpassantinfo, blackkinginfo, whitekinginfo);
     }
 

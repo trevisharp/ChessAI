@@ -1,8 +1,7 @@
-using System.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
-/// TODO: Implements play limitation
+/// Represents a Human Player
 /// </summary>
 public class HumanPlayer : Player
 {
@@ -15,14 +14,14 @@ public class HumanPlayer : Player
     {
         State newstate = State.Empty;
         while (newstate == State.Empty)
-        while (sx == -1 ||
-            (whiteplay && state[sx, sy].IsBlack()) ||
-            (!whiteplay && state[sx, sy].IsWhite()))
-            await Task.Delay(100);
-        newstate = state.MoveCertify(sx, sy, ex, ey);
-
-
-
+        {
+            sx = sy = ex = ey = -1;
+            while (sx == -1 ||
+                (whiteplay && state[sx, sy].IsBlack()) ||
+                (!whiteplay && state[sx, sy].IsWhite()))
+                await Task.Delay(100);
+            newstate = state.MoveCertify(sx, sy, ex, ey);
+        }
         sx = sy = ex = ey = -1;
         return newstate;
     }
