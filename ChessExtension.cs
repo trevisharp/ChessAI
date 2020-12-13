@@ -144,6 +144,59 @@ public static class ChessExtension
                 break;
             case Piece.WhiteBishop:
                 #region WhiteBishop
+                canmove = true;
+                if (di != dj && di != -dj)
+                    break;
+                if (dj > 0 && di > 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i + d, j + d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj > 0 && di < 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i - d, j + d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj < 0 && di > 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i + d, j - d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj < 0 && di < 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i - d, j - d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else canmove = false;
+
+                if (target.IsWhite())
+                    canmove = false;
+                if (canmove)
+                    ns = state.Move(i, j, ti, tj);
                 #endregion
                 break;
             case Piece.WhiteQueen:
@@ -267,6 +320,59 @@ public static class ChessExtension
                 break;
             case Piece.BlackBishop:
                 #region BlackBishop
+                canmove = true;
+                if (di != dj && di != -dj)
+                    break;
+                if (dj > 0 && di > 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i + d, j + d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj > 0 && di < 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i - d, j + d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj < 0 && di > 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i + d, j - d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else if (dj < 0 && di < 0)
+                {
+                    for (int d = 1; d < di; d++)
+                    {
+                        if (state[i - d, j - d] != Piece.None)
+                        {
+                            canmove = false;
+                            break;
+                        }
+                    }
+                }
+                else canmove = false;
+
+                if (target.IsBlack())
+                    canmove = false;
+                if (canmove)
+                    ns = state.Move(i, j, ti, tj);
                 #endregion
                 break;
             case Piece.BlackQueen:
