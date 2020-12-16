@@ -29,6 +29,8 @@ public readonly struct State
     private readonly byte aditionalinfo;
     private readonly byte whitekinginfo;
     private readonly byte blackkinginfo;
+    private readonly byte whitepower;
+    private readonly byte blackpower;
 
     public Piece this[int x, int y]
     {
@@ -63,6 +65,9 @@ public readonly struct State
         aditionalinfo = empty ? 255 : 0;
         this.blackkinginfo = blackkinginfo;
         this.whitekinginfo = whiteblackinfo;
+        if (empty)
+            this.whitepower = this.blackpower = 0;
+        else this.whitepower = this.blackpower = 39;
     }
 
     private State(State original)
@@ -72,55 +77,90 @@ public readonly struct State
         this.aditionalinfo = original.aditionalinfo;
         this.whitekinginfo = original.whitekinginfo;
         this.blackkinginfo = original.blackkinginfo;
+        this.whitepower = original.whitepower;
+        this.blackpower = original.blackpower;
     }
 
-    private State(State original, int sx, int sy, int ex, int ey)
+    private State(State original, int sx, int sy, int ex, int ey, sbyte dwp = 0, sbyte dbp = 0)
     {
         this.board = new byte[64];
         Array.Copy(original.board, this.board, 64);
         this.aditionalinfo = (byte)(original.aditionalinfo % 16);
         this.blackkinginfo = original.blackkinginfo;
         this.whitekinginfo = original.whitekinginfo;
-        Piece p = this[sx, sy];
+        this.whitepower = (byte)(original.whitepower + dwp);
+        this.blackpower = (byte)(original.blackpower + dbp);
+
+        Piece p = this[sx, sy], 
+              t = this[ex, ey];
+        if (t.IsWhite())
+            this.whitepower -= t.Value();
+        else if (t.IsBlack())
+            this.blackpower -= t.Value();
         this[ex, ey] = p;
         this[sx, sy] = Piece.None;
     }
 
     private State(State original, int sx, int sy, int ex, int ey,
-        byte castlinginfo)
+        byte castlinginfo, sbyte dwp = 0, sbyte dbp = 0)
     {
         this.board = new byte[64];
         Array.Copy(original.board, this.board, 64);
         this.aditionalinfo = (byte)(castlinginfo % 16);
         this.blackkinginfo = original.blackkinginfo;
         this.whitekinginfo = original.whitekinginfo;
-        Piece p = this[sx, sy];
+        this.whitepower = (byte)(original.whitepower + dwp);
+        this.blackpower = (byte)(original.blackpower + dbp);
+
+        Piece p = this[sx, sy], 
+              t = this[ex, ey];
+        if (t.IsWhite())
+            this.whitepower -= t.Value();
+        else if (t.IsBlack())
+            this.blackpower -= t.Value();
         this[ex, ey] = p;
         this[sx, sy] = Piece.None;
     }
 
     private State(State original, int sx, int sy, int ex, int ey,
-        byte castlinginfo, byte enpassantinfo)
+        byte castlinginfo, byte enpassantinfo, sbyte dwp = 0, sbyte dbp = 0)
     {
         this.board = new byte[64];
         Array.Copy(original.board, this.board, 64);
         this.aditionalinfo = (byte)(enpassantinfo << 4 + castlinginfo);
         this.blackkinginfo = original.blackkinginfo;
         this.whitekinginfo = original.whitekinginfo;
-        Piece p = this[sx, sy];
+        this.whitepower = (byte)(original.whitepower + dwp);
+        this.blackpower = (byte)(original.blackpower + dbp);
+
+        Piece p = this[sx, sy], 
+              t = this[ex, ey];
+        if (t.IsWhite())
+            this.whitepower -= t.Value();
+        else if (t.IsBlack())
+            this.blackpower -= t.Value();
         this[ex, ey] = p;
         this[sx, sy] = Piece.None;
     }
 
     private State(State original, int sx, int sy, int ex, int ey,
-        byte castlinginfo, byte enpassantinfo, byte blackkinginfo, byte whitekinginfo)
+        byte castlinginfo, byte enpassantinfo, byte blackkinginfo, byte whitekinginfo,
+        sbyte dwp = 0, sbyte dbp = 0)
     {
         this.board = new byte[64];
         Array.Copy(original.board, this.board, 64);
         this.aditionalinfo = (byte)(enpassantinfo << 4 + castlinginfo);
         this.blackkinginfo = blackkinginfo;
         this.whitekinginfo = whitekinginfo;
-        Piece p = this[sx, sy];
+        this.whitepower = (byte)(original.whitepower + dwp);
+        this.blackpower = (byte)(original.blackpower + dbp);
+
+        Piece p = this[sx, sy], 
+              t = this[ex, ey];
+        if (t.IsWhite())
+            this.whitepower -= t.Value();
+        else if (t.IsBlack())
+            this.blackpower -= t.Value();
         this[ex, ey] = p;
         this[sx, sy] = Piece.None;
     }
@@ -133,12 +173,12 @@ public readonly struct State
     /// <param name="ex">x end location of moviment.</param>
     /// <param name="ey">y end location of moviment.</param>
     /// <returns>A new state</returns>
-    public State Move(int sx, int sy, int ex, int ey)
+    public State Move(int sx, int sy, int ex, int ey, sbyte dwp = 0, sbyte dbp = 0)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
             throw new InvalidOperationException("Um movimento ocorre fora do tabuleiro");
-        return new State(this, sx, sy, ex, ey);
+        return new State(this, sx, sy, ex, ey, dwp, dbp);
     }
 
     /// <summary>
@@ -155,7 +195,8 @@ public readonly struct State
     /// <returns>A new state</returns>
     public State Move(int sx, int sy, int ex, int ey,
         bool lefBlkLoseCastling, bool rigBlkLoseCastling,
-        bool lefWhtLoseCastling, bool rigWhtLoseCastling)
+        bool lefWhtLoseCastling, bool rigWhtLoseCastling,
+        sbyte dwp = 0, sbyte dbp = 0)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
@@ -169,7 +210,7 @@ public readonly struct State
             castlinginfo += 4;
         if (rigBlkLoseCastling)
             castlinginfo += 8;
-        return new State(this, sx, sy, ex, ey, castlinginfo);
+        return new State(this, sx, sy, ex, ey, castlinginfo, dwp, dbp);
     }
 
     /// <summary>
@@ -188,7 +229,7 @@ public readonly struct State
     public State Move(int sx, int sy, int ex, int ey,
         bool lefBlkLoseCastling, bool rigBlkLoseCastling,
         bool lefWhtLoseCastling, bool rigWhtLoseCastling,
-        byte column)
+        byte column, sbyte dwp = 0, sbyte dbp = 0)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
@@ -204,7 +245,7 @@ public readonly struct State
         if (rigBlkLoseCastling)
             castlinginfo += 8;
         enpassantinfo = (byte)(column + 1);
-        return new State(this, sx, sy, ex, ey, castlinginfo, enpassantinfo);
+        return new State(this, sx, sy, ex, ey, castlinginfo, enpassantinfo, dwp, dbp);
     }
 
     /// <summary>
@@ -225,7 +266,8 @@ public readonly struct State
     public State Move(int sx, int sy, int ex, int ey,
         bool lefBlkLoseCastling, bool rigBlkLoseCastling,
         bool lefWhtLoseCastling, bool rigWhtLoseCastling,
-        byte column, bool blackKingMove, bool whiteKingMove)
+        byte column, bool blackKingMove, bool whiteKingMove,
+        sbyte dwp = 0, sbyte dbp = 0)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
@@ -250,7 +292,7 @@ public readonly struct State
             whitekinginfo = (byte)(ex + 16 * ey);
 
         return new State(this, sx, sy, ex, ey, castlinginfo,
-            enpassantinfo, blackkinginfo, whitekinginfo);
+            enpassantinfo, blackkinginfo, whitekinginfo, dwp, dbp);
     }
 
     /// <summary>
@@ -270,7 +312,8 @@ public readonly struct State
     public State Move(int sx, int sy, int ex, int ey,
         bool lefBlkLoseCastling, bool rigBlkLoseCastling,
         bool lefWhtLoseCastling, bool rigWhtLoseCastling,
-        bool blackKingMove, bool whiteKingMove)
+        bool blackKingMove, bool whiteKingMove,
+        sbyte dwp = 0, sbyte dbp = 0)
     {
         if (sx < 0 || sx > 7 || sy < 0 || sy > 7 ||
             ex < 0 || ex > 7 || ey < 0 || ey > 7)
@@ -294,7 +337,7 @@ public readonly struct State
             whitekinginfo = (byte)(ex + 16 * ey);
 
         return new State(this, sx, sy, ex, ey, castlinginfo,
-            enpassantinfo, blackkinginfo, whitekinginfo);
+            enpassantinfo, blackkinginfo, whitekinginfo, dwp, dbp);
     }
 
     /// <summary>

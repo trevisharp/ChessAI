@@ -11,6 +11,32 @@ public static class ChessExtension
     public static bool IsBlack(this Piece piece)
         => (byte)piece > 6 && (byte)piece < 13;
 
+    public static byte Value(this Piece piece)
+    {
+        switch (piece)
+        {
+            default:
+            case Piece.None:
+            case Piece.WhiteKing:
+            case Piece.BlackKing:
+                return 0;
+            
+            case Piece.WhiteBishop:
+            case Piece.BlackBishop:
+            case Piece.WhiteKnight:
+            case Piece.BlackKnight:
+                return 3;
+            
+            case Piece.BlackRook:
+            case Piece.WhiteRook:
+                return 5;
+            
+            case Piece.BlackQueen:
+            case Piece.WhiteQueen:
+                return 9;
+        }
+    }
+
     public static bool WhiteTouchIn(this State state, int i, int j)
     {
         return false;
@@ -33,7 +59,8 @@ public static class ChessExtension
 
     // TODO: Check Rook Condition
     // TODO: Check Condition
-    public static State MoveCertify(this State state, int i, int j, int ti, int tj)
+    public static State MoveCertify(this State state, int i, 
+        int j, int ti, int tj, Piece piece = Piece.None)
     {
         State ns = State.Empty;
         int di = ti - i, dj = tj - j, ui, uj;
@@ -44,15 +71,18 @@ public static class ChessExtension
         if (i == ti && j == tj)
             return ns;
 
+        if (piece == Piece.None)
+            piece = state[i, j];
+
         //Play Certify
-        switch (state[i, j])
+        switch (piece)
         {
             case Piece.WhitePawn:
                 #region WhitePawn
                 if (di == 0)
                 {
                     if (dj == 2 && j == 1 && target == Piece.None)
-                        ns = state.Move(i, j, ti, tj, false, false, false, false, (byte)i);
+                        ns = state.Move(i, j, ti, tj, false, false, false, false, (byte)i, 0, 0);
                     else if (dj == 1 && target == Piece.None)
                         ns = state.Move(i, j, ti, tj);
                 }
@@ -65,7 +95,7 @@ public static class ChessExtension
                         column = state.EnPassantInfo - 1;
                         if (column == ti && j == 4)
                         {
-                            ns = state.Move(i, j, ti, tj, false, false, false, false);
+                            ns = state.Move(i, j, ti, tj, false, false, false, false, 0, -1);
                             ns[ti, tj - 1] = Piece.None;
                         }
                     }
@@ -73,7 +103,7 @@ public static class ChessExtension
                 //Promotion
                 if (dj == 1 && ns != State.Empty && tj == 7)
                 {
-                    ns = state.Move(i, j, ti, tj);
+                    ns = state.Move(i, j, ti, tj, 8, 0);
                     ns[ti, tj] = Piece.WhiteQueen;
                 }
                 #endregion
@@ -237,6 +267,8 @@ public static class ChessExtension
                 break;
             case Piece.WhiteKing:
                 #region WhiteKing
+                if (target.IsWhite())
+                    break;
                 if (di > 1 || di < -1 || dj > 1 || dj < -1)
                 {
                     if (state.CanWhiteLeftCastling && di == -2)
@@ -275,7 +307,7 @@ public static class ChessExtension
                 if (di == 0)
                 {
                     if (dj == -2 && j == 6 && target == Piece.None)
-                        ns = state.Move(i, j, ti, tj, false, false, false, false, (byte)i);
+                        ns = state.Move(i, j, ti, tj, false, false, false, false, (byte)i, 0, 0);
                     else if (dj == -1 && target == Piece.None)
                         ns = state.Move(i, j, ti, tj);
                 }
@@ -288,7 +320,7 @@ public static class ChessExtension
                         column = state.EnPassantInfo - 1;
                         if (column == ti && j == 3)
                         {
-                            ns = state.Move(i, j, ti, tj, false, false, false, false);
+                            ns = state.Move(i, j, ti, tj, false, false, false, false, -1, 0);
                             ns[ti, tj + 1] = Piece.None;
                         }
                     }
@@ -296,7 +328,7 @@ public static class ChessExtension
                 //Promotion
                 if (dj == -1 && ns != State.Empty && tj == 0)
                 {
-                    ns = state.Move(i, j, ti, tj);
+                    ns = state.Move(i, j, ti, tj, 0, 8);
                     ns[ti, tj] = Piece.BlackQueen;
                 }
                 #endregion
@@ -460,6 +492,8 @@ public static class ChessExtension
                 break;
             case Piece.BlackKing:
                 #region BlackKing
+                if (target.IsBlack())
+                    break;
                 if (di > 1 || di < -1 || dj > 1 || dj < -1)
                 {
                     if (state.CanBlackLeftCastling && di == -2)
@@ -519,14 +553,6 @@ public static class ChessExtension
                     switch (p)
                     {
                         case Piece.WhitePawn:
-                            if (j == 1 && state[i, j + 1] == Piece.None)
-                                yield return state.Move(i, j, i, j + 2, false, false, false, false, i);
-                            if (state[i, j + 1] == Piece.None)
-                                yield return state.Move(i, j, i, j + 1);
-                            if (i < 7 && state[i + 1, j + 1].IsBlack())
-                                yield return state.Move(i, j, i + 1, j + 1);
-                            if (i > 0 && state[i - 1, j + 1].IsBlack())
-                                yield return state.Move(i, j, i - 1, j + 1);
                             break;
                         case Piece.WhiteRook:
                             break;
@@ -554,14 +580,7 @@ public static class ChessExtension
                     switch (p)
                     {
                         case Piece.BlackPawn:
-                            if (j == 6 && state[i, j - 1] == Piece.None)
-                                yield return state.Move(i, j, i, j - 2, false, false, false, false, i);
-                            if (state[i, j - 1] == Piece.None)
-                                yield return state.Move(i, j, i, j - 1);
-                            if (i < 7 && state[i + 1, j - 1].IsBlack())
-                                yield return state.Move(i, j, i + 1, j - 1);
-                            if (i > 0 && state[i - 1, j - 1].IsBlack())
-                                yield return state.Move(i, j, i - 1, j - 1);
+                            
                             break;
                         case Piece.BlackRook:
                             break;

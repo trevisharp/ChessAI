@@ -4,7 +4,10 @@ using System.Windows.Forms;
 
 Game game = new Game();
 game.WhitePlayer = new HumanPlayer();
-game.BlackPlayer = new HumanPlayer();
+game.BlackPlayer = new AIPlayer()
+{
+    Marshal = new HumbleMarshal(new RandomMajor())
+};
 
 Application.SetHighDpiMode(HighDpiMode.SystemAware);
 Application.EnableVisualStyles();

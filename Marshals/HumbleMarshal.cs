@@ -17,7 +17,10 @@ public class HumbleMarshal : Marshal
         foreach ((State st, double pr) in next.Zip(this.Major.Predict(next)))
         {
             if (pr > max)
+            {
                 selected = st;
+                max = pr;
+            }
         }
         return selected;
     }
