@@ -59,6 +59,9 @@ public readonly struct State
     public byte BlackKingXLocation => (byte)(blackkinginfo % 16);
     public byte BlackKingYLocation => (byte)(blackkinginfo >> 4);
 
+    public byte WhitePower => this.whitepower;
+    public byte BlackPower => this.blackpower;
+
     private State(bool empty, byte blackkinginfo = 255, byte whiteblackinfo = 255)
     {
         board = new byte[64];

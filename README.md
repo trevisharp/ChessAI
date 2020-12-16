@@ -6,4 +6,3 @@ A simple Chess game with AI.
 
 - Globar Pieces Buffer
 - Parallel
-- White/Black Power in state

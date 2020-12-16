@@ -580,7 +580,25 @@ public static class ChessExtension
                     switch (p)
                     {
                         case Piece.BlackPawn:
+                            if (state[i, j - 1] == Piece.None 
+                                && j > 1 
+                                && notCauseWhiteCheck(i, j - 1))
+                                yield return state.Move(i, j, i, j - 1);
                             
+                            if (state[i + 1, j - 1].IsWhite() 
+                                && i < 7
+                                && notCauseWhiteCheck(i + 1, j - 1))
+                                yield return state.Move(i, j, i + 1, j - 1);
+                            
+                            if (state[i + 1, j - 1].IsWhite() 
+                                && i > 0
+                                && notCauseWhiteCheck(i - 1, j - 1))
+                                yield return state.Move(i, j, i + 1, j - 1);
+                            
+                            if (state[i, j - 2] == Piece.None 
+                                && j == 1 
+                                && notCauseWhiteCheck(i, j - 2))
+                                yield return state.Move(i, j, i + 1, j - 1, false, false, false, false, i);
                             break;
                         case Piece.BlackRook:
                             break;
@@ -597,5 +615,33 @@ public static class ChessExtension
             }
         }
         yield break;
+
+        bool notCauseWhiteCheck(int ti, int tj)
+        {
+            int vi = state.WhiteKingXLocation - i, 
+                vj = state.WhiteKingYLocation - j,
+                di = ti - i,
+                dj = tj - j;
+            
+            if (vi == 0 && dj != 0)
+            {
+                
+            }
+            else if (vj == 0)
+            {
+
+            }
+            else if (vi == vj || vi == -vj)
+            {
+
+            }
+
+            return true;
+        }
+
+        bool notCauseBlackCheck(int ti, int tj)
+        {
+            return false;
+        }
     }
 }
